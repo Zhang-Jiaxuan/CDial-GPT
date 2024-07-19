@@ -78,7 +78,12 @@ def sample_sequence(history, tokenizer, model, args, current_output=None):
         input_ids = torch.tensor(instance["input_ids"], dtype=torch.long, device=args.device).unsqueeze(0)
         token_type_ids = torch.tensor(instance["token_type_ids"], dtype=torch.long, device=args.device).unsqueeze(0)
 
-        logits, *_ = model(input_ids, token_type_ids=token_type_ids)
+        # logits, *_ = model(input_ids, token_type_ids=token_type_ids)
+        output = model(input_ids, token_type_ids=token_type_ids)
+        logits = output.logits
+        logits = logits[0, -1, :] / args.temperature
+        logits = top_filtering(logits, top_k=args.top_k, top_p=args.top_p)
+        probs = F.softmax(logits, dim=-1)
         logits = logits[0, -1, :] / args.temperature
         logits = top_filtering(logits, top_k=args.top_k, top_p=args.top_p)
         probs = F.softmax(logits, dim=-1)
@@ -143,7 +148,7 @@ def run():
 
     history = []
     while True:
-        raw_text = input(">>> ")
+        raw_text = input(" >>> ")
         while not raw_text:
             print('Prompt should not be empty!')
             raw_text = input(">>> ")
