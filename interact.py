@@ -79,9 +79,8 @@ def sample_sequence(history, tokenizer, model, args, current_output=None):
         token_type_ids = torch.tensor(instance["token_type_ids"], dtype=torch.long, device=args.device).unsqueeze(0)
 
         # logits, *_ = model(input_ids, token_type_ids=token_type_ids)
-        output = model(input_ids, token_type_ids=token_type_ids)
-        logits = output.logits
-        logits = logits[0, -1, :] / args.temperature
+        ret = model(input_ids, token_type_ids=token_type_ids)
+        logits = ret["logits"][0, -1, :] / args.temperature
         logits = top_filtering(logits, top_k=args.top_k, top_p=args.top_p)
         probs = F.softmax(logits, dim=-1)
 
